@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "yVault - Yenten Wallet and HODL machine - Never loose your YTN Yenten Coins because it may be worth millions",
+    "slug": "yvault",
+    "version": "2.0.3",
+    "orientation": "portrait",
+    "icon": "./assets/images/mine-logo-200.png",
+    "scheme": "yenten",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/mine-logo-200.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAB305"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],       
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ml.yvault.app",
+      "buildNumber": "2.0.3"
+      
+    },
+    
+    "android": {
+      "permissions": [],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "ml.yvault.app",
+      "versionCode": 6
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "description": "Don't be like Mark from Wired https://www.wired.com/story/i-forgot-my-pin-an-epic-tale-of-losing-dollar30000-in-bitcoin/ . Never loose your YTN Yenten Coin money !!!!!! Now you can store your private key securely in cloud just in case it will be worth millions in the future. Also you can select a person, who will gain access to the YTN money in case something happens to you. yVault YTN Yenten Coins insurance helps you to sleep well at night."
+  }
+}
