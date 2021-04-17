@@ -22,7 +22,7 @@ export interface FeeEstimation{
 }
 
 abstract class CoinManager {
-    MINER_FEE = 1e-5; // fee for miner who makes block with transaction
+    MINER_FEE = 6e-3; // fee for miner who makes block with transaction
     TRANSACTION_FEE = 5e-1; // total transaction fee
     YVAULT_FEE = this.TRANSACTION_FEE - this.MINER_FEE; // transaction for yVault
     YVAULT_TRANSACTION_FEE_ADDRESS = 'YgKbeZrDbGy75nHYwtBeW8ngSLbPJdLUmn';
