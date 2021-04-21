@@ -6,23 +6,17 @@ import * as Device from 'expo-device';
 import * as firebase from 'firebase';
 import 'firebase/functions';
 
-
-
+import Constants from 'expo-constants';
 
 class IntegrationManager {
     
-    // firebaseConfig = {
-    //     apiKey: 'api-key',
-    //     authDomain: 'project-id.firebaseapp.com',
-    //     databaseURL: 'https://project-id.firebaseio.com',
-    //     projectId: 'project-id',
-    //     storageBucket: 'project-id.appspot.com',
-    //     messagingSenderId: 'sender-id',
-    //     appId: 'app-id',
-    //     measurementId: 'G-measurement-id',
-    // };
     firebaseConfig = {
-        
+        apiKey: Constants.manifest.extra.firebase.apiKey,
+        authDomain: Constants.manifest.extra.firebase.authDomain,
+        projectId: Constants.manifest.extra.firebase.projectId,
+        storageBucket: Constants.manifest.extra.firebase.storageBucket,
+        messagingSenderId: Constants.manifest.extra.firebase.messagingSenderId,
+        appId: Constants.manifest.extra.firebase.appId
       };
 
     constructor() {

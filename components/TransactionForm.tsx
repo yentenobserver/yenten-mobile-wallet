@@ -82,7 +82,7 @@ const TransactionForm = (props: Props) => {
       return YentenAPI.sendCoins(wif, wallet.a, recipientAddress, amount.value/1e8);
     })
     .then((txResponse:SendTransactionResponse)=>{
-      console.log(txResponse);
+      // console.log(txResponse);
       setTransactionId(txResponse.data.txid!);
       setOrderId(txResponse.data.orderId!);
       return AppManager.savePendingOrder(-feeEstimate.finalAmount, txResponse.data.txid!, txResponse.data.orderId!);      
@@ -91,7 +91,7 @@ const TransactionForm = (props: Props) => {
       setSentMsg('Transaction was sent successfully. It usually takes about 2 minutes to propagate it over the network. Pending order is registered on transaction list.');      
     })
     .catch((error:any)=>{
-      console.log(error, error.message);
+      // console.log(error, error.message);
       setValid(false);
       setErrorMsg(error.message||error);
     })
@@ -110,7 +110,7 @@ const TransactionForm = (props: Props) => {
   }
 
   const onValidityChanged = (valid:boolean)=>{
-    console.log('onvaliditychanged', valid);
+    // console.log('onvaliditychanged', valid);
     revalidate();
   }
   const onAmountEntered = (amount:string)=>{

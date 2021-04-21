@@ -11,6 +11,7 @@ import {Button} from 'galio-framework'
 
 import {UnlockResult, Vault} from '../logic/VaultManager'
 import {Settings} from '../logic/Settings'
+
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function TabTwoScreen({route, navigation}) {  
@@ -23,7 +24,8 @@ export default function TabTwoScreen({route, navigation}) {
   // const { passportPassed} = route.params
 
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
+      
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');

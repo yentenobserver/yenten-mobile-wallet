@@ -67,7 +67,7 @@ export default function Passports({navigation}) {
 
   useFocusEffect(
     React.useCallback(() => {
-      
+
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');

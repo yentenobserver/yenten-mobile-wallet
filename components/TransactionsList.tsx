@@ -15,6 +15,7 @@ import Colors from '../constants/Colors';
 import { AppManager } from '../logic/AppManager';
 import App from '../App';
 import { Alert } from 'react-native';
+import { SmallAmountFromString } from './AmountDisplay';
 
 
 interface Props {
@@ -31,7 +32,7 @@ const TransactionsList = (props: Props) => {
   }
 
   const removePO = (input:any) => {
-    console.log(input);
+    // console.log(input);
     if(!input.oid){
       // only pending order can be removed
       return;
@@ -73,7 +74,7 @@ const TransactionsList = (props: Props) => {
       if(transaction.error){
         filteredOrders.push(order);
       }else{
-        console.log('Pending order was handled so going to remove', order.oid, order.txid)
+        // console.log('Pending order was handled so going to remove', order.oid, order.txid)
         await AppManager.removePendingOrderByOid(order.oid)
       }
         
@@ -207,7 +208,8 @@ function Item(props:ItemProps) {
           {/* <Text></Text> */}
         </View>
         <TouchableOpacity style={{height:50,width:100, justifyContent:"center",alignItems:"center"}} onPress={press} onLongPress={longPress}>
-          <Text style={item.value>=0?styles.listItemAction:styles.listItemActionRed}>{item.value>0?'+':''}{item.value.toFixed(8)}</Text>
+          {/* <Text style={item.value>=0?styles.listItemAction:styles.listItemActionRed}>{item.value>0?'+':''}{item.value.toFixed(8)}</Text> */}
+          <SmallAmountFromString unit='sat' value={item.value.toFixed(8)} colorMark={true} ></SmallAmountFromString>
         </TouchableOpacity>
       </View>
     );

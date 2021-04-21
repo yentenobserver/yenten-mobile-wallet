@@ -2,12 +2,15 @@ import * as Random from 'expo-random';
 import * as yenten from 'yentenjs-lib';
 import { apiClient, SendTransactionResponse, UnspentTransaction, UnspentTransactionResponse, Response} from 'yenten-api-blockchain';
 const CryptoES = require('crypto-es').default;
-import {WalletData} from '../data/localStorage/Model'
+import {UserSetting, WalletData} from '../data/localStorage/Model'
 
 import {AppManager} from './AppManager'
 
 var Buffer = require('safe-buffer').Buffer
-const YENTEN_BLOCKCHAIN_APP_ID = 'TeCBJsmJJo7zJUQ'
+
+import Constants from 'expo-constants';
+
+const YENTEN_BLOCKCHAIN_APP_ID = Constants.manifest.extra.blockchain.apiKey;
 
 export interface AddressWithKey {
     address: string,
@@ -21,11 +24,22 @@ export interface FeeEstimation{
     yVaultFee: number
 }
 
+export interface FiatBalance{
+    USD: number,
+    RUB: number
+    EUR: number
+}
+
+export interface FiatBalances{
+    default: string,
+    balancePip: FiatBalance
+}
+
 abstract class CoinManager {
-    MINER_FEE = 1e-5; // fee for miner who makes block with transaction
+    MINER_FEE = 6e-3; // fee for miner who makes block with transaction
     TRANSACTION_FEE = 5e-1; // total transaction fee
     YVAULT_FEE = this.TRANSACTION_FEE - this.MINER_FEE; // transaction for yVault
-    YVAULT_TRANSACTION_FEE_ADDRESS = 'YgKbeZrDbGy75nHYwtBeW8ngSLbPJdLUmn';
+    YVAULT_TRANSACTION_FEE_ADDRESS = Constants.manifest.extra.blockchain.feeAddress;
     CTRL = '0000XXXX';
 
     constructor() {
@@ -76,9 +90,39 @@ abstract class CoinManager {
             return decrypted.replace(that.CTRL,'');
         })
     }
+    abstract fiatBalance(coinBalanceSat: number):Promise<FiatBalances>;
 }
 
 class YentenManager extends CoinManager {
+
+    async fiatBalance(coinAmount: number):Promise<FiatBalances>{
+        console.log('Fiat balance for coin amount: ', coinAmount);
+        const exchangeRatesResponse:Response = await YentenAPI.getExchangeRates();        
+        const defaultCurrencySetting:UserSetting|undefined = await AppManager.getUserSetting('defaults.fiatCurrency');
+
+        let result:FiatBalances = {
+            default: defaultCurrencySetting?defaultCurrencySetting.v:'EUR',
+            balancePip: {
+                EUR: 0,
+                RUB: 0,
+                USD: 0
+            }
+            
+        }
+        
+        const fiats = ["USD","EUR","RUB"];
+
+        fiats.forEach((item:string)=>{
+            
+            const fiatExchangeRate = exchangeRatesResponse.data.fiat.find((item2:any)=>{
+                return item2.code == item
+            }).er;
+
+            result.balancePip[item as keyof FiatBalance] = fiatExchangeRate*exchangeRatesResponse.data.btc*coinAmount
+        })
+
+        return result;
+    }
 
     addressFromPrivateKeyWIF(privateKeyWIF:string):AddressWithKey{
         const keyPair = yenten.ECPair.fromWIF(
@@ -117,6 +161,10 @@ class YentenManager extends CoinManager {
 
     getBalance(address: string): Promise<Response> {
         return apiClient.getBalance(address);
+    }
+
+    getExchangeRates(): Promise<Response> {
+        return apiClient.getExchangeRates();
     }
 
     generateOrderId(length:number){

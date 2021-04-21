@@ -17,7 +17,9 @@ import NumericInput from '../../components/NumericInput'
 interface Props {
   backgroundColor: string
   iconName: any
-  title: string
+  title: string,
+  stepId: string,
+  onStepComplete?:any
 }
 const GetEmail = (props: Props) => {
   const [userEmail, setUserEmail] = React.useState('');
@@ -26,6 +28,7 @@ const GetEmail = (props: Props) => {
   const [isBusy, setIsBusy] = React.useState<boolean>(false);
   const navigation = useNavigation();
   const [pinValid, setPinValid] = React.useState<boolean>(false);
+  const {onStepComplete, stepId} = props;
 
   useFocusEffect(
     React.useCallback(() => {
@@ -40,11 +43,17 @@ const GetEmail = (props: Props) => {
   );
 
   const mainCTA = () => {
-    AppManager.login(userEmail.toLowerCase(), pin)    
-    .then(()=>{
-      // redirect
-      navigation.navigate('Root');
-    });
+    if(onStepComplete){
+      onStepComplete(stepId, {email: userEmail.toLowerCase(), pin: pin})
+    }
+    // AppManager.login(userEmail.toLowerCase(), pin)
+    // .then(() => {
+    //   return
+    // })
+    // .then(()=>{
+    //   // redirect
+    //   navigation.navigate('Root');
+    // });
   };
   const checkReadiness = () => {
     let valid = true;

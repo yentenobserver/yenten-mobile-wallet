@@ -7,11 +7,13 @@ import { useFocusEffect } from '@react-navigation/native';
 interface Props {
   backgroundColor: string
   iconName: any
-  title: string
+  title: string,
+  stepId: string,
+  onStepComplete?:any
 }
 const Hello = (props: Props) => {
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');

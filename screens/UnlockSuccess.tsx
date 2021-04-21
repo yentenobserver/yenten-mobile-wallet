@@ -16,7 +16,7 @@ import { useFocusEffect } from '@react-navigation/native';
 export default function UnlockSuccess({route}:{route:any}) {
   const { secret } = route.params;
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');

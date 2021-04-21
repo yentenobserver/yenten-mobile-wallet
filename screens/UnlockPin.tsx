@@ -11,7 +11,7 @@ import { LogBox } from 'react-native';
 
 interface Props {
   backgroundColor: string
-
+  onUnlockSuccess:any
 }
 const UnlockPin = (props: Props) => {
 //   const [userEmail, setUserEmail] = React.useState('');
@@ -20,11 +20,13 @@ const UnlockPin = (props: Props) => {
   const navigation = useNavigation();
   const [isTyping, setIsTyping] = React.useState<boolean>(false);
   const [errorMsg, setErrorMsg] = React.useState<string>('');
+  const {onUnlockSuccess} = props;
 
 //   const pinView = React.useRef(null)
 
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
+      
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');
@@ -42,7 +44,7 @@ const UnlockPin = (props: Props) => {
     
     AppManager.checkPin(pincode).then((pinValid:boolean)=>{
         if(pinValid)
-            navigation.navigate('Root')
+            onUnlockSuccess()
         else{            
             setErrorMsg('Invalid PIN. Try again')
             setIsTyping(false);

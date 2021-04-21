@@ -6,7 +6,11 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "expo-publish-tst": "expo publish --release-channel tst",
+    "expo-publish": "expo publish",
+    "expo-android-tst": "expo build:android --release-channel tst",
+    "expo-android": "expo build:android"
   },
   "jest": {
     "preset": "jest-expo"
@@ -25,7 +29,7 @@
     "events": "3.2.0",
     "expo": "~40.0.0",
     "expo-asset": "~8.2.1",
-    "expo-constants": "~9.3.0",
+    "expo-constants": "~9.3.3",
     "expo-device": "~2.4.0",
     "expo-font": "~8.4.0",
     "expo-linking": "~2.0.0",
@@ -51,13 +55,14 @@
     "stream-browserify": "^1.0.0",
     "yentenjs-lib": "1.0.3",
     "ytn-vault-react-native": "0.0.10",
-    "yenten-api-blockchain": "1.0.10",
+    "yenten-api-blockchain": "1.0.12",
     "crypto-es": "1.2.7",
     "react-native-pin-view": "2.5.0",
     "expo-secure-store": "~9.3.0",
     "react-native-qrcode-svg": "6.1.1",
     "react-native-svg": "12.1.0",
-    "expo-clipboard": "~1.0.1"
+    "expo-clipboard": "~1.0.1",
+    "expo-barcode-scanner": "~9.1.0"
   },
   "devDependencies": {
     "@babel/core": "~7.9.0",
@@ -65,7 +70,8 @@
     "@types/react-native": "~0.63.2",
     "jest-expo": "~40.0.0",
     "typescript": "~4.0.0",
-    "rn-nodeify": "10.2.0"
+    "rn-nodeify": "10.2.0",
+    "dotenv": "8.2.0"
   },
   "private": true,
   "react-native": {

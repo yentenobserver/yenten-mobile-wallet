@@ -173,7 +173,7 @@ function WalletNavigator() {
       <WalletStack.Screen
         name="MenuScreen"
         component={DevTools}
-        options={{ headerTitle: 'Tools', headerStyle: {
+        options={{ headerTitle: 'Settings', headerStyle: {
           backgroundColor: Colors.light.yellowSea,
         } }}
       />     

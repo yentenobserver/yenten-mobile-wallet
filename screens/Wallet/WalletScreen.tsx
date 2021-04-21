@@ -2,6 +2,7 @@ import React, {useEffect} from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 
 
+
 import { View } from '../../components/Themed';
 import {ScrollView} from 'react-native'
 import {ActivityIndicator} from 'react-native'
@@ -9,14 +10,15 @@ import {AppManager} from '../../logic/AppManager'
 import { useFocusEffect } from '@react-navigation/native';
 
 
-import CardRow, {CardDoubleRow} from '../../components/CardRow'
-import { WalletBalance, WalletData } from '../../data/localStorage/Model';
+import CardRow, {CardDoubleRow, CardRowDoubleRight} from '../../components/CardRow'
+import { UserSetting, UserSettings, WalletBalance, WalletData } from '../../data/localStorage/Model';
 import WalletConfigurator from '../../components/WalletConfigurator';
-import {YentenAPI} from '../../logic/CoinManager'
+import {FiatBalance, FiatBalances, YentenAPI} from '../../logic/CoinManager'
 import TransactionsList from '../../components/TransactionsList';
 import WalletDetails from '../../components/WalletDetails';
 import { Button } from 'react-native-elements';
 import Colors from '../../constants/Colors';
+
 
 export default function WalletScreen({route, navigation}) {
   // when scanned qr code with yenten://ADDRESS link this will trigger the payment screen
@@ -27,6 +29,9 @@ export default function WalletScreen({route, navigation}) {
   const fromConfiguration = route.params?route.params.configured:undefined;
   const [isBusy, setIsBusy] = React.useState<boolean>(false);
   const [wallet, setWallet] = React.useState<WalletData>()
+  const [fiatBalance, setFiatBalance] = React.useState<number>();
+  const [fiatCurrency, setFiatCurrency] = React.useState<string>('EUR');
+
   const [walletBalance, setWalletBalance] = React.useState<WalletBalance>({
     data: {
       address: 'notset',
@@ -45,8 +50,11 @@ export default function WalletScreen({route, navigation}) {
     });
   }, [navigation]);
 
-  useFocusEffect(
-    React.useCallback(() => {      
+  useFocusEffect(    
+    React.useCallback(() => {
+      
+      // console.log('Screen focused',walletBalance)
+      recalculateFiatBalance()
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');
@@ -57,20 +65,33 @@ export default function WalletScreen({route, navigation}) {
   );
 
   const refresh = ()=>{
-    AppManager.loadWallets().then((wallets:WalletData[])=>{
+    AppManager.loadWallets().then((wallets:WalletData[])=>{      
       if(wallets.length>0){        
-        setWallet(wallets[0]);          
-               
-        YentenAPI.getBalance(wallets[0].a).then((balanceResponse:any)=>{      
-          setWalletBalance(balanceResponse);        
-        })
+        setWallet(wallets[0]);                         
+        YentenAPI.getBalance(wallets[0].a)
+        .then((balanceResponse:any)=>{  
+          //balanceResponse.data.balance=100  
+          setWalletBalance(balanceResponse);                               
+        })                
       }
     })
   }
 
-  // useEffect(() => {    
-  //   refresh();
-  // },[])
+  const recalculateFiatBalance = ()=>{ 
+    if(walletBalance.data.balance>0){
+      YentenAPI.fiatBalance(walletBalance.data.balance).then((balance:FiatBalances)=>{
+        // const x2 = ''+walletBalance.data.balance
+        setFiatCurrency(balance.default);
+        setFiatBalance(balance.balancePip[balance.default as keyof FiatBalance]);
+        // console.log('fiat', x2, balance, balance.default, balance.balancePip[balance.default as keyof FiatBalance]);
+      })
+      // console.log('Current fiat balance: ',fiatBalance, exchangeCourseResponse.data.btc, walletBalance.data.balance, fiatExchangeRate, defaultCurrency);
+    }      
+  }  
+
+  useEffect(() => {        
+    recalculateFiatBalance();    
+  },[walletBalance])
   
   // refreshTransactions(() => {    
   //   if(wallet){         
@@ -103,7 +124,7 @@ export default function WalletScreen({route, navigation}) {
   return (
     <View style={styles.container}>
       {isBusy?<ActivityIndicator size="large"/>:null}     
-      <CardRow leftMsg="YTN" rightMsg={walletBalance.data.balance.toFixed(8)}  imageURL="https://yentencoin.info/images/logo.png"></CardRow>                         
+      <CardRowDoubleRight leftMsg="YTN" rightMsg={walletBalance.data.balance.toFixed(8)} rightMsg2={fiatBalance?.toFixed(2)} rightCurrency={fiatCurrency}  imageURL="https://yentencoin.info/images/logo.png"></CardRowDoubleRight>                         
       
       
         

@@ -11,10 +11,11 @@ import SetPin from './SetPin';
 
 
 interface Props {
-
+  onOnboardingCompleted?:any
 }
 const Onboarding = (props: Props) => {
     const navigation = useNavigation();  
+    const {onOnboardingCompleted} = props;
     
     const [email, setEmail] = useState<string>('');
     const [pin, setPIN] = useState<string>('');
@@ -27,13 +28,23 @@ const Onboarding = (props: Props) => {
       setPIN(data);
     }
 
-    useEffect(() => {
+    const onStepCompleted = (stepId: string, stepData:any) =>{
+      if(stepId == 'get-email'){
+        AppManager.login(stepData.email, stepData.pin)        
+        .then(()=>{
+          if(onOnboardingCompleted)
+            onOnboardingCompleted()
+        });
+      }
+    }
+
+    // useEffect(() => {
     
-        AppManager.loggedUser().then((user:string|null)=>{
-          // console.log('Checked user', user)
-          if(user) navigation.navigate('Root')
-        })
-      },[])
+    //     AppManager.loggedUser().then((user:string|null)=>{
+    //       // console.log('Checked user', user)
+    //       if(user) navigation.navigate('Root')
+    //     })
+    //   },[])
     return (
         <View style={{ flex: 1 }}>
           <ViewPager style={{ flex: 1 }} showPageIndicator={true}>
@@ -41,7 +52,8 @@ const Onboarding = (props: Props) => {
               <Hello
                 backgroundColor={Colors.light.yellowSea}
                 iconName="sun"
-                title="Welcome to the yVault app"                
+                title="Welcome to the yVault app"
+                stepId='hello'                                
               />
             </View>
             <View key="2">
@@ -49,7 +61,8 @@ const Onboarding = (props: Props) => {
                 backgroundColor={Colors.light.yellowSea}
                 iconName="sun"
                 title="Welcome to the weather app"
-                
+                stepId='get-email'
+                onStepComplete={onStepCompleted}
               />
             </View>
             {/* <View key="3">

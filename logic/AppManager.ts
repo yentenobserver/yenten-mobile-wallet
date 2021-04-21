@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CloudPassportEntity, PassportData, PendingOrder, UnlockPassportEntity, WalletData} from '../data/localStorage/Model'
+import {CloudPassportEntity, PassportData, PendingOrder, UnlockPassportEntity, UserSetting, UserSettings, WalletData} from '../data/localStorage/Model'
 import moment from 'moment'
 import {Integrations} from './IntegrationManager'
 import { AppState } from 'react-native';
@@ -22,38 +22,43 @@ export enum APP_STATE {
 }
 class ApplicationManager {
 
-    // currentAppStateHandler:STATE_LISTENER_STATUS = STATE_LISTENER_STATUS.NOT_READY;
-    // appState:APP_STATE = APP_STATE.INACTIVE;
-    // previousAppState:APP_STATE = APP_STATE.INACTIVE;
+    getUserSettings():Promise<UserSettings>{
+        return AsyncStorage.getItem('userSettings').then((item:string|null)=>{                      
+            return JSON.parse(item?''+item:'{}');
+        }) 
+    }
 
-    // onForeground:{name:string, f:Function}[] = [];
+    saveUserSettings(settings:UserSettings):Promise<void>{
+        return AsyncStorage.setItem('userSettings', JSON.stringify(settings));
+    }
 
+    saveUserSetting(singleSetting: UserSetting):Promise<void>{
+        let that = this;
+        return this.getUserSettings().then((settings:UserSettings)=>{
+            if(settings){
+                if(!settings.items){
+                    settings.items = [];
+                }
+                // first remove previous if there is such
+                let updatedSettingItems = settings.items.filter((item:UserSetting)=>{return item.k != singleSetting.k});
+                // and update or set new
+                updatedSettingItems.push(singleSetting);
 
-    // addOnForegroundListener(listener:{name:string, f:Function}){
-    //     let that = this;
-    //     console.log('Adding foreground listener', listener);
-    //     if(this.onForeground.findIndex((item:{name:string, f:Function})=>{return item.name == listener.name})==-1){
-    //         that.onForeground.push(listener);
-    //         console.log('Listener added', listener);
-    //     }
-    // }
+                settings.items = updatedSettingItems;
+                console.log('Saving', settings)
+                return that.saveUserSettings(settings);
+            }
+        })
+    }
 
-    // handleAppStateChange(nextAppState:any){
-    //     let that = this;
-    //     this.currentAppStateHandler = STATE_LISTENER_STATUS.LISTENING;
-    //     this.previousAppState = this.appState;
-    //     this.appState = nextAppState;
-
-    //     console.log('Listeners ', that.onForeground);
-
-    //     if(this.previousAppState && this.previousAppState.match(/inactive|background/) && this.appState == 'active'){
-            
-    //         that.onForeground.forEach((item:{name:string, f:Function})=>{
-    //             item.f(that.appState, that.previousAppState)
-    //         })
-    //     }
-        
-    // }
+    getUserSetting(key:string):Promise<UserSetting|undefined>{
+        let that = this;
+        return that.getUserSettings().then((settings:UserSettings)=>{
+            if(settings&&settings.items){
+                return settings.items.find((item:UserSetting)=>{return item.k == key});
+            }
+        })
+    }
 
     checkPin(pincode:string):Promise<boolean>{
         let that = this;
@@ -76,11 +81,11 @@ class ApplicationManager {
     removePendingOrderByOid(oid:string):Promise<void>{
 
         return this.loadPendingOrders().then((orders:PendingOrder[])=>{
-            console.log('Order before ', JSON.stringify(orders));
+            // console.log('Order before ', JSON.stringify(orders));
             const filteredOrders = orders.filter((item:PendingOrder)=>{
                 return item.oid != oid
             })
-            console.log('Order after ', JSON.stringify(filteredOrders));
+            // console.log('Order after ', JSON.stringify(filteredOrders));
             return AsyncStorage.setItem('orders', JSON.stringify(filteredOrders));
         })
     }
@@ -101,7 +106,8 @@ class ApplicationManager {
         })
         .then((orders:PendingOrder[])=>{            
             return AsyncStorage.setItem('orders', JSON.stringify(orders));
-        })        
+        })
+
     }
 
     loadPendingOrder(txid:string):Promise<PendingOrder|undefined>{
@@ -154,7 +160,8 @@ class ApplicationManager {
         .then((wallets:WalletData[])=>{
             // console.log('Updated passport list', passports);
             return AsyncStorage.setItem('wallets', JSON.stringify(wallets));
-        })        
+        })
+
         
     }
 
@@ -188,7 +195,8 @@ class ApplicationManager {
         return AsyncStorage.setItem('userEmail', email)
         .then(()=>{
             return that.savePin(pin);
-        })        
+        })
+
     }
     loggedUser():Promise<string|null>{
         
@@ -203,9 +211,10 @@ class ApplicationManager {
             // console.log('Signed out');
         })
     }
-    _clearAll(){
+    _clearAll():Promise<void>{
         return AsyncStorage.clear().then(()=>{
             // console.log('Local data cleared');
+            return SecureStore.deleteItemAsync('pin')
         })
     }
 

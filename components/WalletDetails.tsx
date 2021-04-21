@@ -60,8 +60,8 @@ const WalletDetails = (props: Props) => {
         buttons={buttons}
         containerStyle={{height: 50, width: '100%'}}
         buttonStyle={styles.buttons}
-        selectedTextStyle={styles.selectedText}
-        selectedButtonStyle={styles.selectedButtonStyle}
+        selectedTextStyle={styles.selectedText}        
+        selectedButtonStyle={styles.selectedButtonStyle}        
       />
       {selectedIndex==0?<TransactionsList address={wallet.a}></TransactionsList>:null}
       {selectedIndex==1?<View style={{flex:1, alignSelf: 'stretch', marginHorizontal: 20}}><TransactionForm recipient={externalRecipientAddress} wallet={wallet} balance={balance} onReturn={handleAfterTransaction}></TransactionForm></View>:null}    
@@ -85,8 +85,9 @@ const styles = StyleSheet.create({
   buttons: {    
 
   },
+  
   selectedText:{
-    fontSize: 20
+    fontSize: 16
   },
   selectedButtonStyle:{
     backgroundColor: Colors.dark.rustyNail

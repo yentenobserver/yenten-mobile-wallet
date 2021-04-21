@@ -34,7 +34,8 @@ export default function TabOneScreen({navigation}) {
   const [isBusy, setIsBusy] = React.useState<boolean>(false);  
 
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
+      
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');

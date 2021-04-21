@@ -2,7 +2,7 @@
   "expo": {
     "name": "yVault - Yenten Wallet and HODL machine - Never loose your YTN Yenten Coins because it may be worth millions",
     "slug": "yvault",
-    "version": "2.0.3",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/mine-logo-200.png",
     "scheme": "yenten",
@@ -21,18 +21,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ml.yvault.app",
-      "buildNumber": "2.0.3"
+      "buildNumber": "2.1.0"
       
     },
     
     "android": {
-      "permissions": [],
+      "permissions": ["CAMERA"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "ml.yvault.app",
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

@@ -61,3 +61,12 @@ export interface PendingOrder {
     ct: number  // creation timestamp
 }
 
+export interface UserSetting {
+    k: string,
+    v: any
+}
+
+export interface UserSettings {
+    items?: UserSetting[]
+}
+

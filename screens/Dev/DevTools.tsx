@@ -17,15 +17,18 @@ import { WalletData } from '../../data/localStorage/Model';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { Settings } from '../../logic/Settings';
+import { Overlay } from 'react-native-elements';
+import DefaultFiatCurrencySettings from '../../components/DefaultFiatCurrencySettings';
 
 
 
 export default function DevTools({route, navigation}) {  
   const [isBusy, setIsBusy] = React.useState<boolean>(false);  
   const [options, setOptions] = React.useState<ListItemData[]>([]);
+  const [showDefaultFiatConfigurator, setShowDefaultFiatConfigurator] = React.useState<boolean>(false);
 
   useFocusEffect(
-    React.useCallback(() => {      
+    React.useCallback(() => {
       // Do something when the screen is focused
       return () => {
         // alert('Screen was unfocused');
@@ -53,6 +56,10 @@ export default function DevTools({route, navigation}) {
         }
       })
     })
+  }
+
+  const configureDefaultFiat = () => {
+    setShowDefaultFiatConfigurator(true);
   }
 
   const exportAddress = () => {
@@ -101,11 +108,13 @@ export default function DevTools({route, navigation}) {
     let optionsBuilder:ListItemData[] = [
       
       {id:'address_export', s1:'ADDRESS EXPORT', s2:'When clicked your address private key will be copied to Clipbord', a:'Export'},
+      {id:'configure_default_fiat_currency', s1:'DEFAULT FIAT CURRENCY', s2:'Default fiat currency is used when displaying wallet balance', a:'Configure'},
       // {id:'address_hodl', s1:'HODL IN COLD WALLET', s2:'When clicked your wallet will be send to COLD WALLET for safe storage.', a:'Send to Cold Wallet'},
       // {id:'unbind', s1:'ADDRESS BINDING', s2:'When clicked you will securely erase your wallet data from this device. NOTICE this is irreversible operation, you may loose your coins.', a:'Unbind'}
     ];   
     if(Settings.developmentMode){
       optionsBuilder.push({id:'unbind', s1:'ADDRESS BINDING', s2:'When clicked you will securely erase your wallet data from this device. NOTICE this is irreversible operation, you may loose your coins.', a:'Unbind'})
+      optionsBuilder.push({id:'clear_user_settings', s1:'CLEAR USER SETTINGS', s2:'When clicked will erase user preferences', a:'Clear'})
     } 
     setOptions(optionsBuilder)
     // refreshTransactions();
@@ -119,6 +128,14 @@ export default function DevTools({route, navigation}) {
     }
     if(item.id=='address_export'){
       exportAddress();
+    }
+
+    if(item.id=='configure_default_fiat_currency'){
+      configureDefaultFiat();
+    }
+
+    if(item.id=='clear_user_settings'){
+      AppManager.saveUserSettings({});
     }
     // if(item.id=='address_hodl'){
     //   return loadWalletWIF()
@@ -148,6 +165,10 @@ export default function DevTools({route, navigation}) {
       </View>
       
       </ScrollView> */}
+
+      <Overlay isVisible={showDefaultFiatConfigurator} onBackdropPress={()=>{setShowDefaultFiatConfigurator(false)}}>
+        <DefaultFiatCurrencySettings onCompleted={()=>{setShowDefaultFiatConfigurator(false)}}></DefaultFiatCurrencySettings>
+      </Overlay>
       </>
       }
       

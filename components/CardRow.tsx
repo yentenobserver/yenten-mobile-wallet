@@ -6,6 +6,7 @@ import { Image } from 'react-native-elements';
 import { Text } from 'galio-framework';
 
 import colors from '../constants/Colors'
+import { MediumAmountFromString, SmallAmountFromString } from './AmountDisplay';
 // import { StyleSheet} from 'react-native';
 
 const theme = {
@@ -27,7 +28,7 @@ const theme = {
     }  
   },
   right: {
-    fontSize: 26,
+    fontSize: 18,
     fontWeight: 'bold',
   }
   
@@ -58,9 +59,50 @@ const CardRow = (props: Props) => {
             </Text>
         </View>
         <View style={styles.rightCol}>
-          <Text style={styles.rightText}>
+          <MediumAmountFromString value={rightMsg} unit='sat' colorMark={true}></MediumAmountFromString>
+          
+          {/* <Text style={styles.rightText}>
           {rightMsg}
-          </Text>
+          </Text> */}
+        </View>
+        
+      </View>      
+    </Card>
+  )
+}
+
+interface CardRowDoubleRightProps {
+  imageURL?:string,
+  leftMsg?:string,
+  rightMsg?:string,
+  rightMsg2?:string,
+  rightCurrency?:string,
+  backgroundColor?:string,
+  
+}
+export const CardRowDoubleRight = (props: CardRowDoubleRightProps) => {
+  // const {bgColor, src, asset, width, height, descColor, description, title} = props;
+  const {backgroundColor, leftMsg, rightMsg, rightMsg2, imageURL, rightCurrency} = props;
+
+  return (
+    // <Card containerStyle={{...styles.card,bgColor?...{backgroundColor: bgColor}:null}}>
+    <Card containerStyle={[styles.card,backgroundColor?{backgroundColor: backgroundColor}:null]}>
+      <View style={styles.row}>
+        <View style={styles.leftCol}>
+          {imageURL?<Image style={styles.image} source={{ uri: imageURL }}></Image>:null} 
+          
+          <Text style={styles.leftText}>
+            {leftMsg}
+            </Text>
+        </View>
+        <View style={styles.rightCol2Row}><>
+          <MediumAmountFromString value={rightMsg} unit='sat' colorMark={true}></MediumAmountFromString>
+          <SmallAmountFromString value={rightMsg2} unit='cents' colorMark={true} currency={rightCurrency}></SmallAmountFromString>
+          {/* <Text style={styles.rightText}>
+          {rightMsg}
+          </Text> */}
+          </>
+          
         </View>
         
       </View>      
@@ -191,6 +233,15 @@ const styles = StyleSheet.create({
     alignContent: 'flex-start',
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'nowrap',        
+    height: theme.imageSize
+  },
+  rightCol2Row: {
+    flex: 1, 
+    justifyContent: 'center',
+    alignContent: 'flex-start',
+    alignItems: 'flex-end',
+    flexDirection: 'column',
     flexWrap: 'nowrap',        
     height: theme.imageSize
   },

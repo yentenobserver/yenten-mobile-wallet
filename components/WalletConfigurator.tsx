@@ -16,7 +16,6 @@ import { useNavigation } from '@react-navigation/native';
 import Distancer from './Distancer';
 import { AlertInline, AlertInlineSuccess } from './AlertsInline';
 
-
 interface Props {
   onComplete():void,
   // placeholder: string,
@@ -53,7 +52,7 @@ const WalletConfigurator = (props: Props) => {
       });
     })
     .then((address:AddressWithKey)=>{
-      console.log('Wallet created and saved', address);        
+      console.log('Wallet created and saved', address);  
       onComplete();
     })
     
@@ -82,7 +81,7 @@ const WalletConfigurator = (props: Props) => {
         });
       })
       .then((address:AddressWithKey)=>{
-        console.log('Wallet imported and saved', address);          
+        console.log('Wallet imported and saved', address);  
         onComplete();
       }).catch((error:any)=>{
         setErrorMsg(error.message||error);
@@ -164,7 +163,7 @@ const styles = StyleSheet.create({
 
   },
   selectedText:{
-    fontSize: 20
+    fontSize: 16
   },
   selectedButtonStyle:{
     backgroundColor: Colors.dark.rustyNail
