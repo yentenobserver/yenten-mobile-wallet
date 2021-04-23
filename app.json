@@ -22,7 +22,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "ml.yvault.app",
       "buildNumber": "2.1.0"
-      
     },
     
     "android": {
@@ -32,7 +31,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "ml.yvault.app",
-      "versionCode": 7
+      "versionCode": 8
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

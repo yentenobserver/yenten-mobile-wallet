@@ -7,9 +7,11 @@
     "web": "expo start --web",
     "eject": "expo eject",
     "test": "jest --watchAll",
-    "expo-publish-tst": "expo publish --release-channel tst",
-    "expo-publish": "expo publish",
+    "expo-publish-prod2": "expo publish --release-channel prod2",    
+    "expo-android-prod2": "expo build:android --release-channel prod2",
+    "expo-publish-tst": "expo publish --release-channel tst",    
     "expo-android-tst": "expo build:android --release-channel tst",
+    "expo-publish": "expo publish",
     "expo-android": "expo build:android"
   },
   "jest": {
@@ -55,7 +57,7 @@
     "stream-browserify": "^1.0.0",
     "yentenjs-lib": "1.0.3",
     "ytn-vault-react-native": "0.0.10",
-    "yenten-api-blockchain": "1.0.12",
+    "yenten-api-blockchain": "1.0.13",
     "crypto-es": "1.2.7",
     "react-native-pin-view": "2.5.0",
     "expo-secure-store": "~9.3.0",

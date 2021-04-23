@@ -8,6 +8,40 @@ import 'firebase/functions';
 
 import Constants from 'expo-constants';
 
+export interface TemplateDataCoin{
+    n: string,
+    s: string,
+    etx:string
+}
+
+export interface TemplateDataParty{
+    n: string,
+    e?: string
+}
+
+export interface TemplateDataTransfer{
+    a?: string,
+    f?: string,
+    t?: string,
+    tx?:string
+}
+
+export interface TemplateDataAddressWithKey{
+    a: string,
+    k: string
+}
+
+export interface EmailMessageData{
+    ti: string,//template id
+    tid: {
+        tdc?: TemplateDataCoin,
+        tdp?: TemplateDataParty,
+        tdp2?: TemplateDataParty,
+        tdt?: TemplateDataTransfer,
+        tdawk?: TemplateDataAddressWithKey
+    }    
+}
+
 class IntegrationManager {
     
     firebaseConfig = {
@@ -21,14 +55,29 @@ class IntegrationManager {
 
     constructor() {
         // Initialize Firebase
+        
         firebase.initializeApp(this.firebaseConfig);
     }
 
 
     sendSMS(msg: string, phoneNumber?: string) {
         Communications.text(phoneNumber, msg);
-    }
+    }   
     
+    notifyEmail(recipient:string, messageData:EmailMessageData):Promise<void>{
+        const callable = firebase.functions().httpsCallable('notifyEmail')
+        const data:any = {
+            dto: {
+                r: recipient,
+                d: messageData
+            }
+        }
+
+        return callable(data).then(()=>{
+            return;
+        })
+    }
+
     storePassport(passportId: string, passportName: string, unlockEmail: string, keyUnlockShare: string, keyControllShare: string, maturity: number, created: number): Promise<void> {
         
         const callable = firebase.functions().httpsCallable('storePassport')

@@ -6,6 +6,10 @@ import {UserSetting, WalletData} from '../data/localStorage/Model'
 
 import {AppManager} from './AppManager'
 
+import {EmailMessageData, Integrations} from './IntegrationManager'
+
+import {toAmount} from './Calculator'
+
 var Buffer = require('safe-buffer').Buffer
 
 import Constants from 'expo-constants';
@@ -15,6 +19,10 @@ const YENTEN_BLOCKCHAIN_APP_ID = Constants.manifest.extra.blockchain.apiKey;
 export interface AddressWithKey {
     address: string,
     key: string
+}
+
+export interface Address {
+    address: string    
 }
 
 export interface FeeEstimation{
@@ -35,17 +43,34 @@ export interface FiatBalances{
     balancePip: FiatBalance
 }
 
+export interface CoinDefinition{
+    name: string,
+    symbol: string,
+    shortName: string,
+    addressPrefix: string[],
+    explorerTx: string
+}
+
+export interface Recipient{
+    email?:string,
+    address: string,
+    privateKey?:string
+}
+
 abstract class CoinManager {
-    MINER_FEE = 6e-3; // fee for miner who makes block with transaction
+    MINER_FEE = 5e-2; // fee for miner who makes block with transaction
     TRANSACTION_FEE = 5e-1; // total transaction fee
     YVAULT_FEE = this.TRANSACTION_FEE - this.MINER_FEE; // transaction for yVault
     YVAULT_TRANSACTION_FEE_ADDRESS = Constants.manifest.extra.blockchain.feeAddress;
     CTRL = '0000XXXX';
 
     constructor() {
+        // console.log(this.YVAULT_TRANSACTION_FEE_ADDRESS);
         apiClient.init(YENTEN_BLOCKCHAIN_APP_ID);
     }
     abstract newAddress(): AddressWithKey;
+
+    abstract coinDefinition():CoinDefinition;
 
     _rng(size: number): Buffer {
         var bytes = Buffer.allocUnsafe(size);
@@ -91,9 +116,44 @@ abstract class CoinManager {
         })
     }
     abstract fiatBalance(coinBalanceSat: number):Promise<FiatBalances>;
+    abstract extractAddressFromURL(url: string):string;
+    abstract isValidBlockchainAddress(blockchainAddress:string):Promise<boolean>
 }
 
 class YentenManager extends CoinManager {
+
+    coinDefinition():CoinDefinition{
+        return {
+            addressPrefix: ['Y'],
+            name: 'Yenten',
+            shortName: 'YTN',
+            symbol: 'YTN',
+            explorerTx: 'http://explorer.yentencoin.info/tx'
+        }
+    }
+
+    isValidBlockchainAddress(blockchainAddress:string):Promise<boolean>{
+        return apiClient.isAddressValid(blockchainAddress).then((response:Response)=>{
+            return response.data.isvalid;
+        })
+    }
+
+    extractAddressFromURL(url: string):string{
+        let result = '';
+        // possible formats
+        // yenten:YgKbeZrDbGy75nHYwtBeW8ngSLbPJdLUmn?amount=1000.00000000&label=yVault&message=Support has been scanned!
+        // yenten://YgKbeZrDbGy75nHYwtBeW8ngSLbPJdLUmn?amount=1000.00000000&label=yVault&message=Support has been scanned!
+
+        // remove all after the '?'
+        var n = url.indexOf('?');        
+        result = url.substring(0, n != -1 ? n : url.length);
+
+        // remove yenten: or yenten:// prefix
+        result = result.replace(/yenten:\/{0,2}/g,'')
+
+        return result;
+
+    }
 
     async fiatBalance(coinAmount: number):Promise<FiatBalances>{
         console.log('Fiat balance for coin amount: ', coinAmount);
@@ -141,7 +201,7 @@ class YentenManager extends CoinManager {
         const keyPair = yenten.ECPair.makeRandom({ network: yenten.networks.yenten, rng: this._rng });
         const { address } = yenten.payments.p2pkh({ pubkey: keyPair.publicKey, network: yenten.networks.yenten, });
         const privateKey = keyPair.toWIF()
-        console.log('Address', address, privateKey)
+        // console.log('Address', address, privateKey)
 
         let result: AddressWithKey = {
             address: address!,
@@ -188,7 +248,48 @@ class YentenManager extends CoinManager {
         })
     }
 
-    sendCoins(fromWIF:string, fromAddress: string, recipientAddress: string, amountNetto: number):Promise<SendTransactionResponse> {
+
+    /**
+     * If provided recipient address is a valid blockchain address then that address is returned.
+     * Otherwise it is assumed that one time blockchain address with private key shall be generated 
+     * and returned.
+     * @param recipientAddressOrEmail 
+     * @returns {Promise<AddressWithKey|Address>} recipient address if the address is a valid blockchain address, or newly generated random address otherwise
+     */
+    async _recipient(recipientAddressOrEmail:string):Promise<Recipient>{
+        
+        const isBlockchainAddress = await this.isValidBlockchainAddress(recipientAddressOrEmail);
+
+        let result:Recipient = {
+            address: recipientAddressOrEmail,
+            email: undefined,
+            privateKey: undefined
+        }
+
+        if(isBlockchainAddress){
+            // recipientAddressOrEmail is a valid address, not email
+            result.address = recipientAddressOrEmail
+        }else{
+            const oneTimeAddressWithKey:AddressWithKey = this.newAddress();
+            result.address = oneTimeAddressWithKey.address
+            result.privateKey = oneTimeAddressWithKey.key
+            result.email = recipientAddressOrEmail
+
+        }                    
+        
+        return result;
+    }
+
+    /**
+     * Makes a transaction and sends it to recipient blockchain address or email address.
+     * When email address is used an artificial yenten address is created and recipient receives address details including
+     * private key.
+     * @param fromWIF Private key of the person sending coins
+     * @param fromAddress Blockchain address of the sender
+     * @param recipientAddressOrEmail Blockchain address of the recipient or recipient email address
+     * @param amountNetto coin amount to be sent (fee will be added to the netto amount)
+     */
+    sendCoins(fromWIF:string, fromAddress: string, recipientAddressOrEmail: string, amountNetto: number):Promise<SendTransactionResponse> {
         let that = this;
         let inputs: [{ hash: string, index: number, nonWitnessUtxo:any }?] = [];
         let inputsTotalSum: number = 0; // total amount of coins from all inputs
@@ -196,7 +297,16 @@ class YentenManager extends CoinManager {
         console.log('Estimated fees ', fees)
 
 
-        return apiClient.getUnspent(fromAddress, fees.finalAmount)
+        // let recipientAddress:string = recipientAddressOrEmail; 
+        let response:SendTransactionResponse|undefined;
+
+        let recipient:Recipient|undefined;
+
+        return this._recipient(recipientAddressOrEmail)
+        .then((value:Recipient)=>{
+            recipient = value;
+            return apiClient.getUnspent(fromAddress, fees.finalAmount)
+        })
             .then((unspents: UnspentTransactionResponse) => {
                 if (unspents.error) {
                     throw new Error(unspents.error.message);
@@ -212,7 +322,7 @@ class YentenManager extends CoinManager {
                 return unspents;
             })
             .then((unspents: UnspentTransactionResponse) => {
-                console.log('Unspents are ', unspents)
+                // console.log('Unspents are ', unspents)
                 // this is tricky, the sum may be much larger than the amount so be carefull when calculating change
                 inputsTotalSum = unspents.data.sum!;
             })            
@@ -223,7 +333,7 @@ class YentenManager extends CoinManager {
                     // @ts-ignore
                     .addInputs(inputs)  // add unspent inputs that sum up to the value greater than amountNetto + transaction fees
                     .addOutput({
-                        address: recipientAddress,
+                        address: recipient!.address,
                         value: Math.round(amountNetto*1e8), // 
                     }) // the actual "spend" 
                     .addOutput({
@@ -261,7 +371,43 @@ class YentenManager extends CoinManager {
                 if(sendTransactionResponse.error){
                     throw new Error(sendTransactionResponse.error.message);
                 }
-                return sendTransactionResponse;
+                response = sendTransactionResponse;
+
+                if(recipient?.email){
+                    const data:EmailMessageData = {
+                        ti: 'coin2email-receiving',
+                        tid: {
+                            // transaction data
+                            tdt: {
+                                a: toAmount(amountNetto,'sat').text,
+                                f: fromAddress,
+                                t: recipient.address,
+                                tx: sendTransactionResponse.data.txid
+                            },
+                            // receiving party
+                            tdp: {
+                                n: recipient.email,
+                                e: recipient.email
+                            },
+                            // coin info
+                            tdc:{
+                                n: that.coinDefinition().name,
+                                s: that.coinDefinition().symbol,
+                                etx: that.coinDefinition().explorerTx
+                            },
+                            tdawk: {
+                                a: recipient.address,
+                                k: recipient.privateKey!
+                            }
+                        }
+                    }
+                    // console.log('Sending to email',data)
+                    return Integrations.notifyEmail(recipient.email, data);
+                }
+                
+            })
+            .then(()=>{
+                return response!;
             })
 
     }
