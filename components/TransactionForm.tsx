@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 // import { StyleSheet} from 'react-native';
 
 import { Text } from 'galio-framework';
-import { ActivityIndicator, StyleSheet, TouchableOpacity} from 'react-native';
+import { ActivityIndicator, Linking, StyleSheet, TouchableOpacity} from 'react-native';
 import { View } from './Themed';
 
 import {FeeEstimation, YentenAPI} from '../logic/CoinManager'
@@ -154,37 +154,47 @@ const TransactionForm = (props: Props) => {
       <ActivityIndicator size="large" style={{paddingVertical:150}}/>:
       <>
       <Scroller>
-        <Text h3>Payment</Text>   
-        <TextInput style={{marginVertical:0}} label={`Recipient address (${YentenAPI.coinDefinition().shortName} or email)`} placeholder={`${YentenAPI.coinDefinition().name} address or email address`} minLength={8} autoCapitalize="characters" errorMsg="Please provide valid recipient address" onValidationStateChanged={onValidityChanged} onValueEntered={onRecipientEntered} value={recipientAddress}></TextInput>
-        <TouchableOpacity onPress={() => setScanAddressFromQR(true)}>
-        <Text style={{color: 'blue'}}>
-          or scan address from QR Code
-        </Text>
-      </TouchableOpacity>        
-        <TextInput label="Amount" placeholder="Amount to send" minLength={1} maxLength={7+8+1} errorMsg="Please provide valid amount" onValidationStateChanged={onValidityChanged} onValueEntered={onAmountEntered} customValidator={(input:string)=>{return !isNaN(parseFloat(input))}} keyboard="decimal-pad"></TextInput>
+        {sentMsg?null:<>
+          <Text h3>Payment</Text>   
+          <TextInput style={{marginVertical:0}} label={`Recipient address (${YentenAPI.coinDefinition().shortName} or email)`} placeholder={`${YentenAPI.coinDefinition().name} address or email address`} minLength={8} autoCapitalize="characters" errorMsg="Please provide valid recipient address" onValidationStateChanged={onValidityChanged} onValueEntered={onRecipientEntered} value={recipientAddress}></TextInput>
+          <TouchableOpacity onPress={() => setScanAddressFromQR(true)}>
+          <Text style={{color: 'blue'}}>
+            or scan address from QR Code
+          </Text>
+        </TouchableOpacity>        
+          <TextInput label="Amount" placeholder="Amount to send" minLength={1} maxLength={7+8+1} errorMsg="Please provide valid amount" onValidationStateChanged={onValidityChanged} onValueEntered={onAmountEntered} customValidator={(input:string)=>{return !isNaN(parseFloat(input))}} keyboard="decimal-pad"></TextInput>
+          
+          <View style={styles.amountContainer}>
+            <Text>Transaction fee:</Text>
+            <Text>{feeEstimate.totalTransactionFee.toFixed(8)}</Text>
+          </View>
+          <View style={styles.amountContainer}>
+            <Text>Transaction amount (amount+fee):</Text>
+            <Text>{feeEstimate.finalAmount.toFixed(8)}</Text>          
+          </View>
+          <View style={styles.amountContainer}>
+            <Text>Remaining balance:</Text>
+            <Text>{(balance.data.balance-feeEstimate.finalAmount).toFixed(8)}</Text>          
+          </View>
+        </>}
         
-        <View style={styles.amountContainer}>
-          <Text>Transaction fee:</Text>
-          <Text>{feeEstimate.totalTransactionFee.toFixed(8)}</Text>
-        </View>
-        <View style={styles.amountContainer}>
-          <Text>Transaction amount (amount+fee):</Text>
-          <Text>{feeEstimate.finalAmount.toFixed(8)}</Text>          
-        </View>
-        <View style={styles.amountContainer}>
-          <Text>Remaining balance:</Text>
-          <Text>{(balance.data.balance-feeEstimate.finalAmount).toFixed(8)}</Text>          
-        </View>
-        {sentMsg?
-        <AlertInlineSuccess title="Money sent" msg={sentMsg}>
-          <Text style={{paddingVertical:10}} selectable>TransactionId: {transactionId}</Text>
-          <Text style={{paddingVertical:10}} selectable>OrderId: {orderId}</Text>
-          <ButtonCentered label="Go to transactions" onPress={handleReturn}></ButtonCentered>        
-        </AlertInlineSuccess>
+        {sentMsg?<>
+          <Text h3>Payment success</Text>
+          <AlertInlineSuccess title="Transaction sent" msg={sentMsg}>
+            <TouchableOpacity onPress={()=>{ Linking.openURL(`${YentenAPI.coinDefinition().explorerTx}/${transactionId}`)}}>
+              <Text style={{paddingTop:10, paddingBottom: 5}} selectable>TransactionId (view in browser):</Text>
+              <Text style={{paddingBottom:10}} selectable>{transactionId}</Text>
+            </TouchableOpacity>
+
+            <Text style={{paddingVertical:10}} selectable>OrderId: {orderId}</Text>
+            <ButtonCentered label="Go to transactions" onPress={handleReturn}></ButtonCentered>        
+          </AlertInlineSuccess>
+        </>
+        
         :
         <>
         {isValid&&valueEntered?<ButtonCentered label="Send" onPress={mainCTA}></ButtonCentered>:null}
-        {!isValid&&valueEntered?<AlertInline title="Invalid transaction data" msg={errorMsg} type="warning"></AlertInline>:null}
+        {!isValid&&valueEntered?<AlertInline title="Error - check payment data" msg={errorMsg} type="warning"></AlertInline>:null}
         </>
         }
         

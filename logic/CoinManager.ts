@@ -58,7 +58,7 @@ export interface Recipient{
 }
 
 abstract class CoinManager {
-    MINER_FEE = 5e-2; // fee for miner who makes block with transaction
+    MINER_FEE = 5e-3; // fee for miner who makes block with transaction
     TRANSACTION_FEE = 5e-1; // total transaction fee
     YVAULT_FEE = this.TRANSACTION_FEE - this.MINER_FEE; // transaction for yVault
     YVAULT_TRANSACTION_FEE_ADDRESS = Constants.manifest.extra.blockchain.feeAddress;
@@ -134,6 +134,9 @@ class YentenManager extends CoinManager {
 
     isValidBlockchainAddress(blockchainAddress:string):Promise<boolean>{
         return apiClient.isAddressValid(blockchainAddress).then((response:Response)=>{
+            // console.log('Gor responst', response);
+            if(response.error)
+                throw new Error(response.error.message)
             return response.data.isvalid;
         })
     }
@@ -257,15 +260,13 @@ class YentenManager extends CoinManager {
      * @returns {Promise<AddressWithKey|Address>} recipient address if the address is a valid blockchain address, or newly generated random address otherwise
      */
     async _recipient(recipientAddressOrEmail:string):Promise<Recipient>{
-        
-        const isBlockchainAddress = await this.isValidBlockchainAddress(recipientAddressOrEmail);
-
         let result:Recipient = {
             address: recipientAddressOrEmail,
             email: undefined,
             privateKey: undefined
         }
 
+        const isBlockchainAddress = await this.isValidBlockchainAddress(recipientAddressOrEmail);        
         if(isBlockchainAddress){
             // recipientAddressOrEmail is a valid address, not email
             result.address = recipientAddressOrEmail
@@ -274,9 +275,9 @@ class YentenManager extends CoinManager {
             result.address = oneTimeAddressWithKey.address
             result.privateKey = oneTimeAddressWithKey.key
             result.email = recipientAddressOrEmail
+        } 
 
-        }                    
-        
+        // console.log('Result recipient',recipientAddressOrEmail, result);
         return result;
     }
 
@@ -294,7 +295,7 @@ class YentenManager extends CoinManager {
         let inputs: [{ hash: string, index: number, nonWitnessUtxo:any }?] = [];
         let inputsTotalSum: number = 0; // total amount of coins from all inputs
         let fees = that.estimateFees(amountNetto);
-        console.log('Estimated fees ', fees)
+        // console.log('Estimated fees ', fees)
 
 
         // let recipientAddress:string = recipientAddressOrEmail; 
