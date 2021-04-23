@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 // import { StyleSheet} from 'react-native';
 
 import { Text } from 'galio-framework';
-import { ActivityIndicator, StyleSheet} from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity} from 'react-native';
 import { View } from './Themed';
 
 import {FeeEstimation, YentenAPI} from '../logic/CoinManager'
@@ -16,6 +16,7 @@ import { ButtonCentered } from './Controlls';
 import { AlertInline, AlertInlineSuccess } from './AlertsInline';
 import { SendTransactionResponse } from 'yenten-api-blockchain';
 import { useNavigation } from '@react-navigation/native';
+import QRAddressScanner from './QRAddressScanner';
 
 interface Props {
   wallet: WalletData,
@@ -27,6 +28,8 @@ const TransactionForm = (props: Props) => {
   const {wallet, balance, onReturn, recipient} = props;
   // const DEFAULT_FEE_SATOSHIS = 0.5e8; 
   const [isBusy, setIsBusy] = React.useState<boolean>(false);  
+
+  const [scanAddressFromQR, setScanAddressFromQR] = React.useState<boolean>(false); 
 
   const [recipientAddress, setRecipientAddress] = useState<string>(recipient||'');
   const [amountString, setAmountString] = useState<string>('');
@@ -61,10 +64,15 @@ const TransactionForm = (props: Props) => {
       valid = false
       setErrorMsg('Please provide amount to be sent.')
     }
-      
-    if(!recipientAddress || !recipientAddress.toUpperCase().startsWith('Y')){
+
+    if(!recipientAddress) {
       valid = false
-      setErrorMsg('Invalid recipient address. Only segwit addressess starting with \'Y\' letter are supported.')
+      setErrorMsg(`Please enter recipient by providing ${YentenAPI.coinDefinition().name} address or email address`)
+    }
+                
+    if(recipientAddress && !(YentenAPI.coinDefinition().addressPrefix.includes(recipientAddress.charAt(0))||AppManager.isEmailValid(recipientAddress))){
+      valid = false
+      setErrorMsg(`Invalid recipient address. Only ${YentenAPI.coinDefinition().name} segwit addressess starting with [${YentenAPI.coinDefinition().addressPrefix.toString()}] letters or email address are supported.`)
     }
       
     setValid(valid);
@@ -88,7 +96,7 @@ const TransactionForm = (props: Props) => {
       return AppManager.savePendingOrder(-feeEstimate.finalAmount, txResponse.data.txid!, txResponse.data.orderId!);      
     })
     .then(()=>{
-      setSentMsg('Transaction was sent successfully. It usually takes about 2 minutes to propagate it over the network. Pending order is registered on transaction list.');      
+      setSentMsg('Transaction was sent successfully. It usually takes about 2-10 minutes to propagate it over the network. Pending order is registered on transaction list.');      
     })
     .catch((error:any)=>{
       // console.log(error, error.message);
@@ -117,11 +125,11 @@ const TransactionForm = (props: Props) => {
     setValueEntered(true);
     setAmountString(amount);
     setAmount(amountFromString(amount));
-    console.log('Amount is ', amount, amountFromString(amount));
+    // console.log('Amount is ', amount, amountFromString(amount));
     const feeEstimation = YentenAPI.estimateFees(amountFromString(amount).value/1e8);
-    console.log('Estimated fee: ', feeEstimation);
+    // console.log('Estimated fee: ', feeEstimation);
     setFeeEstimate(feeEstimation);
-    console.log(wallet.a);
+    // console.log(wallet.a);
   }
 
   const handleReturn = ()=>{
@@ -130,6 +138,11 @@ const TransactionForm = (props: Props) => {
     setErrorMsg('');
     setSentMsg('')
     if(onReturn) onReturn();
+  }
+
+  const handleAddressFromQRCode = (data:any)=>{
+    onRecipientEntered(data);    
+    setScanAddressFromQR(false);    
   }
 
 
@@ -142,8 +155,14 @@ const TransactionForm = (props: Props) => {
       <>
       <Scroller>
         <Text h3>Payment</Text>   
-        <TextInput label="Recipient address" placeholder="Starting with Y" minLength={8} autoCapitalize="characters" errorMsg="Please provide valid recipient address" onValidationStateChanged={onValidityChanged} onValueEntered={onRecipientEntered} customValidator={(input:string)=>{return !input.toUpperCase().startsWith('Y')}} value={recipientAddress}></TextInput>
+        <TextInput style={{marginVertical:0}} label={`Recipient address (${YentenAPI.coinDefinition().shortName} or email)`} placeholder={`${YentenAPI.coinDefinition().name} address or email address`} minLength={8} autoCapitalize="characters" errorMsg="Please provide valid recipient address" onValidationStateChanged={onValidityChanged} onValueEntered={onRecipientEntered} value={recipientAddress}></TextInput>
+        <TouchableOpacity onPress={() => setScanAddressFromQR(true)}>
+        <Text style={{color: 'blue'}}>
+          or scan address from QR Code
+        </Text>
+      </TouchableOpacity>        
         <TextInput label="Amount" placeholder="Amount to send" minLength={1} maxLength={7+8+1} errorMsg="Please provide valid amount" onValidationStateChanged={onValidityChanged} onValueEntered={onAmountEntered} customValidator={(input:string)=>{return !isNaN(parseFloat(input))}} keyboard="decimal-pad"></TextInput>
+        
         <View style={styles.amountContainer}>
           <Text>Transaction fee:</Text>
           <Text>{feeEstimate.totalTransactionFee.toFixed(8)}</Text>
@@ -170,7 +189,8 @@ const TransactionForm = (props: Props) => {
         }
         
         <Distancer distance={100}></Distancer>
-      </Scroller>   
+      </Scroller>  
+      <QRAddressScanner scan={scanAddressFromQR} onCancel={()=>{setScanAddressFromQR(false)}} onScanned={handleAddressFromQRCode}></QRAddressScanner> 
       </>}
       
       
