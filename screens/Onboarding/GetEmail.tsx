@@ -65,6 +65,10 @@ const GetEmail = (props: Props) => {
     return valid;
   };
 
+  const inputEmail = (email:string) => {
+    // clear email - whitespaces    
+    setUserEmail(email.trim());
+  }
 
   useEffect(() => {    
     const isReady = checkReadiness()&&pinValid;
@@ -84,7 +88,7 @@ const GetEmail = (props: Props) => {
         <ActivityIndicator size="large" />
         :
         <View style={styles.section}>
-          <Input style={styles.pass} placeholder="Will be used to unlock" email onChangeText={(text: string) => setUserEmail(text)}
+          <Input style={styles.pass} placeholder="Will be used to unlock" email onChangeText={(text: string) => inputEmail(text)}
             value={userEmail} label="Your email" autoCapitalize='none' caretHidden={true}/>
           {isNotReady ? <Text muted>Please provide valid email.</Text> : null}
 
